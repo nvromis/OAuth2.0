@@ -94,10 +94,17 @@ public class ConferenceApi {
 
         // Create a new Profile entity from the
         // userId, displayName, mainEmail and teeShirtSize
-        Profile profile = new Profile(userId, displayName, mainEmail, teeShirtSize);
+       // Profile profile = new Profile(userId, displayName, mainEmail, teeShirtSize);
 
         // TODO 3 (In Lesson 3)
         // Save the Profile entity in the datastore
+        Profile profile = getProfile(user);
+        if (profile == null)
+        profile = new Profile(userId, displayName, mainEmail, teeShirtSize);
+        else
+        profile.update(displayName,teeShirtSize);
+
+        ofy().save().entity(profile).now();
 
         // Return the profile
         return profile;
@@ -115,15 +122,14 @@ public class ConferenceApi {
      */
     @ApiMethod(name = "getProfile", path = "profile", httpMethod = HttpMethod.GET)
     public Profile getProfile(final User user) throws UnauthorizedException {
-        if (user == null) {
-            throw new UnauthorizedException("Authorization required");
-        }
+    if (user == null) {
+    throw new UnauthorizedException("Authorization required");
+    }
+    String userId = user.getUserId();
+    Key key = Key.create(Profile.class,userId);
+    Profile profile = (Profile)ofy().load().key(key).now();
 
-        // TODO
-        // load the Profile Entity
-        String userId = ""; // TODO
-        Key key = null; // TODO
-        Profile profile = null; // TODO load the Profile entity
-        return profile;
+    return profile;
+
     }
 }
