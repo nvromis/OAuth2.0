@@ -23,7 +23,7 @@ public class ProfileForm {
      */
     public ProfileForm(String displayName, TeeShirtSize teeShirtSize) {
         this.displayName = displayName;
-        this.teeShirtSize = teeShirtSize;
+        this.teeShirtSize = teeShirtSize == null ? teeShirtSize.NOT_SPECIFIED : teeShirtSize;
     }
 
     public String getDisplayName() {
