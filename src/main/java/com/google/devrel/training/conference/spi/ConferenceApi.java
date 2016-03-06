@@ -9,14 +9,19 @@ import java.util.List;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.Named;
-import com.google.api.server.spi.config.ApiConfig.Factory;
 import com.google.api.server.spi.config.ApiMethod.HttpMethod;
 import com.google.api.server.spi.response.ConflictException;
 import com.google.api.server.spi.response.ForbiddenException;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.api.server.spi.response.UnauthorizedException;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
+import com.google.appengine.api.taskqueue.Queue;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.api.users.User;
 import com.google.devrel.training.conference.Constants;
+import com.google.devrel.training.conference.domain.Announcement;
 import com.google.devrel.training.conference.domain.Conference;
 import com.google.devrel.training.conference.domain.Profile;
 import com.google.devrel.training.conference.form.ConferenceForm;
@@ -261,6 +266,12 @@ public class ConferenceApi {
         // Save Conference and Profile Entities
         
          ofy().save().entities(profile, conference).now();
+         Queue queue = QueueFactory.getDefaultQueue();
+         queue.add(
+        		 TaskOptions.Builder.withUrl("/crons/send_confirmation_email").
+        		 param("email", user.getEmail()).
+        		 param("conferenceInfo", conferenceForm.getName())
+        );
 
          return conference;
     }
@@ -568,5 +579,16 @@ public class ConferenceApi {
         return result;
 	}
 
+	@ApiMethod(name = "getAnnouncement", 
+			path = "announcement", 
+			httpMethod = HttpMethod.GET)
+	public Announcement getAnnouncement() {
+		// TODONE GET announcement from memcache by key and if it exist return it
+        MemcacheService memcacheService = MemcacheServiceFactory.getMemcacheService();
+		Announcement myvalue = (Announcement) memcacheService.get(Constants.MEMCACHE_ANNOUNCEMENTS_KEY);
+
+		return myvalue;
+	}
+    
     
 }
